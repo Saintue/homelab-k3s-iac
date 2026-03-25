@@ -1,0 +1,50 @@
+---
+- name: Setup k3s on master
+  hosts: masters
+  become: yes
+  tasks:
+    - name: Install k3s on master
+      shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Get k3s token
+      slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_token
+
+    - name: Create .kube directory
+      file:
+        path: /home/vagrant/.kube
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0700'
+
+    - name: Copy kubeconfig to vagrant user
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /home/vagrant/.kube/config
+        owner: vagrant
+        group: vagrant
+        mode: '0600'
+        remote_src: yes
+
+    - name: Add KUBECONFIG to bashrc
+      lineinfile:
+        path: /home/vagrant/.bashrc
+        line: 'export KUBECONFIG=/home/vagrant/.kube/config'
+        create: yes
+
+- name: Setup workers
+  hosts: workers
+  become: yes
+  vars:
+    master_ip: "192.168.56.10"
+    token: "{{ hostvars[groups['masters'][0]]['k3s_token']['content'] | b64decode | trim }}"
+  tasks:
+    - name: Install k3s worker
+      shell: |
+        curl -sfL https://get.k3s.io | K3S_URL=https://{{ master_ip }}:6443 K3S_TOKEN={{ token }} sh -
+      args:
+        creates: /usr/local/bin/k3s
