@@ -78,9 +78,14 @@ function Install-Vagrant {
     }
     
     Write-Info "Installing Vagrant (silent mode)..."
-    $process = Start-Process -FilePath $InstallerPath -ArgumentList "/S" -Wait -PassThru -NoNewWindow
-    if ($process.ExitCode -eq 0) {
-        Write-Info "Vagrant installed successfully."
+    $process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$InstallerPath`" /quiet /norestart" -Wait -PassThru -NoNewWindow
+    
+    if ($process.ExitCode -eq 0 -or $process.ExitCode -eq 3010) {
+        if ($process.ExitCode -eq 3010) {
+            Write-Info "Vagrant installed successfully. REBOOT REQUIRED."
+        } else {
+            Write-Info "Vagrant installed successfully."
+        }
         return $true
     } else {
         Write-ErrorMsg "Vagrant installation failed. Exit code: $($process.ExitCode)"

@@ -2,8 +2,8 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu-22.04"
-  config.vm.box_url = "file://./ubuntu-22.04.box"
+  config.vm.box = "jammy-server-cloudimg-amd64-vagrant.box"
+  config.vm.box_url = "file://./jammy-server-cloudimg-amd64-vagrant.box"
 
   config.vm.provider "virtualbox" do |vb|
     vb.memory = 2048
